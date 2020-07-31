@@ -8,8 +8,14 @@ def get_args():
     import argparse
 
     parser = argparse.ArgumentParser(description="Takes read1, read2, read3, and read4 FASTQ files. Returns analysis of quality scores by cycle.")
-    parser.add_argument('-r','--read',  action='store', nargs='?', type=str, 
-                    required=True, help='read file that ends in .fastq', dest="read")
+    parser.add_argument('-r1','--read1',  action='store', nargs='?', type=str, 
+                    required=True, help='read1 file that ends in .fastq', dest="read1")
+    parser.add_argument('-r2','--read2',  action='store', nargs='?', type=str, 
+                    required=True, help='read2 file that ends in .fastq', dest="read2")
+    parser.add_argument('-r3','--read3',  action='store', nargs='?', type=str, 
+                    required=True, help='read3 file that ends in .fastq', dest="read3")
+    parser.add_argument('-r4','--read4',  action='store', nargs='?', type=str, 
+                    required=True, help='read4 file that ends in .fastq', dest="read4")
 
     return parser.parse_args()
 
@@ -51,16 +57,14 @@ def seqLength(file1:str)->int:
     return l
 
 
-def populate_list(file1:str, l:int)->(float,int):
+def calcMean(file1:str, l:int)->list:
     '''This function takes a FASTQ file and returns the 
     summation of the phred values per base in a list 
     and the number of lines as an integer'''
     import gzip
 
-    all_qscores = []
-
-    for x in range(l):
-        all_qscores.append([])
+    mean_scores = []
+    mean_scores = init_list(mean_scores, l)
 
     LN = 0
 
@@ -70,61 +74,78 @@ def populate_list(file1:str, l:int)->(float,int):
             line = line.rstrip("\n")
             if LN%4 == 0:
                 for i in range(len(line)):
-                    all_qscores[i].append(convert_phred(line[i]))
+                    mean_scores[i] += convert_phred(line[i])
     
-    return all_qscores, LN
-
-
-def statList(all_qscores:list, LN:int, l:int)->None:
-    '''Takes a list of lists of phred scores. Calculates the mean, variance,
-    standard deviation, and median. Prints the values.'''
-    # Calculate Mean
-    mean_scores = []
-    mean_scores = init_list(mean_scores, l)
-    
-    for i in range(len(all_qscores)):
-        for j in range(len(all_qscores[i])):
-            mean_scores[i] += all_qscores[i][j]
+    for i in range(len(mean_scores)):
         mean_scores[i] = 4*mean_scores[i]/LN
-    
+
     return mean_scores
 
 
-def displayResults(mean_scores:list)->None:
+def displayResults(mean_list:list)->None:
     '''Takes a list of of mean qscores (list) per FASTQ file 
     and prints the results and distribution.'''
 
     # Print results
-    print("# Base", "Mean Qscore", sep="\t")
+    print("Mean Quality Scores")
+    print("# Base", "R1", "R2", "R3", "R4", sep="\t")
 
-    for i in range(len(mean_scores)):
-        print(i, format(mean_scores[i],'.2f'), sep='\t')
-    
+    for i in range(len(mean_list[0])):
+        print(i, end="\t")
+
+        for j in range(len(mean_list)):
+            try:
+                print(format(mean_list[j][i],'.2f'), end="\t")
+            except IndexError:
+                print(end='\t')
+
+        print()
+
     # Plot distribution
     import matplotlib.pyplot as plt
 
-    plot1 = plt.figure(1)
-    plt.plot(mean_scores)
-    plt.title("Average Quality Score Per Base")
-    plt.ylabel("Mean Quality Score")
-    plt.xlabel("# Base")
-    plt.savefig("Mean_Qscore")
+    for i in range(len(mean_list)):
+        plot1 = plt.figure(i+1)
+        plt.plot(mean_list[i])
+        plt.title("Average Quality Score Per Base")
+        plt.ylabel("Mean Quality Score")
+        plt.xlabel("# Base")
+        plt.savefig("Mean_Qscore_R%i" %int(i+1))
 
     return None
 
 
-def main(file1:str):
+def main(read_list:list):
     '''Takes read1, read2, read3, and read4 FASTQ files. 
     Returns analysis of quality scores by cycle.'''
+    mean_list = []
+    x, y = 1, 1
 
-    l = seqLength(file1)
-    list1, LN = populate_list(file1, l)
-    mean_scores = statList(list1, LN, l)
-    displayResults(mean_scores)
+    print("Input File Name", "Paired End Read or Index", sep='\t')
 
+    for file1 in read_list:
+        l = seqLength(file1)
+        mean_list.append(calcMean(file1, l))
+
+        # Determine which files contain the indexes and which contain the paired end reads
+        print(file1, end='\t')
+        if l > 16: # Illumina barcodes will never be greater than 16
+            print("read", x, sep='')
+            x += 1
+        if l <= 16:
+            print("index", y, sep='')
+            y += 1
+
+    print()
+    displayResults(mean_list)
+    
 
 if __name__ =="__main__":
     args = get_args()
-    read = args.read
+    read1 = args.read1
+    read2 = args.read2
+    read3 = args.read3
+    read4 = args.read4
+    read_list = [read1, read2, read3, read4]
 
-    main(read)
+    main(read_list)
