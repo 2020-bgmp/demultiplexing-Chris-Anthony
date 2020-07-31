@@ -57,16 +57,14 @@ def seqLength(file1:str)->int:
     return l
 
 
-def populate_list(file1:str, l:int)->(float,int):
+def calcMean(file1:str, l:int)->list:
     '''This function takes a FASTQ file and returns the 
     summation of the phred values per base in a list 
     and the number of lines as an integer'''
     import gzip
 
-    all_qscores = []
-
-    for x in range(l):
-        all_qscores.append([])
+    mean_scores = []
+    mean_scores = init_list(mean_scores, l)
 
     LN = 0
 
@@ -76,23 +74,11 @@ def populate_list(file1:str, l:int)->(float,int):
             line = line.rstrip("\n")
             if LN%4 == 0:
                 for i in range(len(line)):
-                    all_qscores[i].append(convert_phred(line[i]))
+                    mean_scores[i] += convert_phred(line[i])
     
-    return all_qscores, LN
-
-
-def statList(all_qscores:list, LN:int, l:int)->None:
-    '''Takes a list of lists of phred scores. Calculates the mean, variance,
-    standard deviation, and median. Prints the values.'''
-    # Calculate Mean
-    mean_scores = []
-    mean_scores = init_list(mean_scores, l)
-    
-    for i in range(len(all_qscores)):
-        for j in range(len(all_qscores[i])):
-            mean_scores[i] += all_qscores[i][j]
+    for i in range(len(mean_scores)):
         mean_scores[i] = 4*mean_scores[i]/LN
-    
+
     return mean_scores
 
 
@@ -112,9 +98,9 @@ def displayResults(mean_list:list)->None:
                 print(format(mean_list[j][i],'.2f'), end="\t")
             except IndexError:
                 print(end='\t')
-        
+
         print()
-    
+
     # Plot distribution
     import matplotlib.pyplot as plt
 
@@ -139,9 +125,7 @@ def main(read_list:list):
 
     for file1 in read_list:
         l = seqLength(file1)
-        list1, LN = populate_list(file1, l)
-        mean_scores = statList(list1, LN, l)
-        mean_list.append(mean_scores)
+        mean_list.append(calcMean(file1, l))
 
         # Determine which files contain the indexes and which contain the paired end reads
         print(file1, end='\t')
@@ -154,7 +138,7 @@ def main(read_list:list):
 
     print()
     displayResults(mean_list)
-
+    
 
 if __name__ =="__main__":
     args = get_args()
