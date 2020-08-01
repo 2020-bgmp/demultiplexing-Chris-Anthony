@@ -1,0 +1,110 @@
+def argparse():
+    '''allow for user input from command line'''
+
+    argparse object
+        - read 1 FASTQ argument
+        - read 2 FASTQ argument
+        - read 3 FASTQ argument
+        - read 4 FASTQ argument
+        - barcodes txtfile argument
+
+    return argparse arguments
+
+def createBarcodePairs(file:str)->dict:
+    '''Take in the indexes.txt, returns a dictionary whose keys are barcode pairs'''
+    
+    1. extract barcodes from column five from textfile
+        a. store them in a list (list-i5)
+    2. create new list with reverse complement of barcodes
+        a. intialize empty list (list-i7) 
+        b. loop through list-5
+        c. call reverseComp Function
+        d. append reverse complement to list-i7
+    3. Make dictionary keys out of the combinations of lists-i5/i7
+        a. initialize an empty list
+        b. For each item in list-i5, concatenate the barcode with every barcode in list-i7
+        c. separate barcodes with dash symbol "-"
+
+    return dictionary with barcode pairs as keys
+
+def reverseComp(barcode:str)->str:
+    '''Take in a sequence string. Returns its reverse complement.'''
+
+    1. store string as variable
+    1. reverse the string
+    2. loop through string and convert bases:
+        A -> T
+        T -> A
+        C -> G
+        G -> C
+        N -> N 
+
+    return reverse complement as string
+    
+def convert_phred(letter:str)->int:
+    '''Converts a single character into a phred score'''
+
+    return int
+
+def menaQual(quality line:str)->float:
+    '''Takes a quality line and returns the average qvalue'''
+
+    1. intialize a variable to 0.0
+    2. loop over sequence
+        a. convert phred value (convert_phred function)
+        b. running sum
+    3. divide sum by length of sequence to get average
+
+    return average as float
+
+def add2header(record:list)->list:
+    '''Takes a record stored in a list. Adds barcode pair to header line'''
+
+    1. concatenate barcode pair with header line separate by colon ":"
+
+    return record list
+
+def errorCorrect(record1:list, record2:list)->record1, record2:
+    '''takes barcode records and attempts to eror correct'''
+
+    1. reverse complement the second barcode using reverseComp function
+    2. iterate through both barcodes (char by char) to see if they match
+        - if they dont match (contains N), convert N to the other character
+    3. reverse complement the second barcode again
+
+    return records as lists with updated barcodes
+
+def main():
+    '''Takes in four read FASTQ files, iterates record by record, 
+    and separates records into output files based on barcode pair/quality'''
+
+    1. call createBarcode function
+    2. unzip all four files using gzip module and store each as a variable
+    3. iterate through each file line by line
+        a. store record as a list (one per file)
+        b. barcode quality check
+            - call meanQual value 
+            - if quality of barcodes are below threshold (fix value can be user-inputted)
+                * add barcode pairs to header line (add2header function)
+                * output R1/R4 to low quality FASTQ files
+        c. check is barcode has N in sequence
+            - if the number of N is 1:
+                * call error correction function
+                * continue below
+            - else:
+                * add barcode pairss to header line (add2header function)
+                * output R1/R4 to low quality FASTQ files
+        d. compare the barcodes (R2 and R3)
+            - if match:
+                * match character by character, let N be equivalent to A,T,C,G
+                * if N in index, call errorCorrect function to correct it using barcode pair
+                * add barcode pairs to header line (add2header function)
+                * output R1/R4 to barcode specific output FASTQ files
+                * count occurance in barcode pairs dictionary
+            - else mismatch:
+                * add barcode pairs to header line (add2header function)
+                * output R1/R4 to mismatch output FASTQ files
+                * count occurance in barcode pairs dictionary
+
+    4. print barcode pair dictionary (pairs and number of occurances) in a table
+    5. close all input/output files
