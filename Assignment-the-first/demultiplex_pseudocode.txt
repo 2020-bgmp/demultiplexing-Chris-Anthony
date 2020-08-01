@@ -10,6 +10,9 @@ def argparse():
 
     return argparse arguments
 
+Input: N/A
+Output: N/A
+
 def createBarcodePairs(file:str)->dict:
     '''Take in the indexes.txt, returns a dictionary whose keys are barcode pairs'''
     
@@ -22,10 +25,13 @@ def createBarcodePairs(file:str)->dict:
         d. append reverse complement to list-i7
     3. Make dictionary keys out of the combinations of lists-i5/i7
         a. initialize an empty list
-        b. For each item in list-i5, concatenate the barcode with every barcode in list-i7
+        b. For each item in list-i5, concatenate the barcode with the same position in list-i7
         c. separate barcodes with dash symbol "-"
 
     return dictionary with barcode pairs as keys
+
+Input: txtfile containing AAAA
+Output: dictionary with key AAAA-TTTT
 
 def reverseComp(barcode:str)->str:
     '''Take in a sequence string. Returns its reverse complement.'''
@@ -40,11 +46,17 @@ def reverseComp(barcode:str)->str:
         N -> N 
 
     return reverse complement as string
-    
+
+Input: ATCG
+Output: CGAT
+
 def convert_phred(letter:str)->int:
     '''Converts a single character into a phred score'''
 
     return int
+
+Input: A
+Output: 32
 
 def menaQual(quality line:str)->float:
     '''Takes a quality line and returns the average qvalue'''
@@ -57,12 +69,18 @@ def menaQual(quality line:str)->float:
 
     return average as float
 
+Input: AAAA
+Output: 32.0
+
 def add2header(record:list)->list:
     '''Takes a record stored in a list. Adds barcode pair to header line'''
 
     1. concatenate barcode pair with header line separate by colon ":"
 
     return record list
+
+Input: [header, AAAA, +, quality]
+Output: [header:AAAA, AAAA, +, quality]
 
 def errorCorrect(record1:list, record2:list)->record1, record2:
     '''takes barcode records and attempts to eror correct'''
@@ -74,13 +92,20 @@ def errorCorrect(record1:list, record2:list)->record1, record2:
 
     return records as lists with updated barcodes
 
+Input: ATCN, CGAT
+Output: ATCG, CGAT
+
 def main():
     '''Takes in four read FASTQ files, iterates record by record, 
     and separates records into output files based on barcode pair/quality'''
 
-    1. call createBarcode function
-    2. unzip all four files using gzip module and store each as a variable
-    3. iterate through each file line by line
+    1. call createBarcode function.
+    2. Create/open output files
+        a. a R1/R4 output file for each barcode pair in dictionary
+        b. a R1/R4 output file for low quality/unknown
+        c. a R1/R4 output file for mismatch barcode pairs
+    3. unzip all four files using gzip module and store each as a variable
+    4. iterate through each file line by line simultaneously. Use zip_longest from itertools 
         a. store record as a list (one per file)
         b. barcode quality check
             - call meanQual value 
@@ -108,3 +133,5 @@ def main():
 
     4. print barcode pair dictionary (pairs and number of occurances) in a table
     5. close all input/output files
+
+Note to self: learn to call variable in a string
