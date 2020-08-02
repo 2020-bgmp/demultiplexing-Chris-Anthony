@@ -37,9 +37,29 @@
     
 ## Part 2
 1. Define the problem
+
+    Develop an algorithm to de-multiplex the samples and report index-hopping given two index read and two biological read FASTQ files and a textfile containing the barcodes. Account for low quality and unknown index reads. 
+    
 2. Describe output
+
+    Demultiplexed FASTQ files with the index-pair added to the header line
+        - 1 FASTQ per index pair (48 total) (1 index pair per biological read 1 and 2)
+        - 2 FASTQ for non-matching index-pairs (1 index pair per biological read 1 and 2)
+        - 2 FASTQ for low quality (determined in Part 1) or unknown base (1 index pair per biological read 1 and 2)
+    Also, report the following number of occurances:
+        - properly matched indexes
+        - mismatched indexes (index-hopping observed)
+        - index pairs with unknown base
+        
 3. Upload your [4 input FASTQ files](../TEST-input_FASTQ) and your [4 expected output FASTQ files](../TEST-output_FASTQ).
+
+    See https://github.com/2020-bgmp/demultiplexing-Chris-Anthony/tree/master/TEST-input_FASTQ
+    and https://github.com/2020-bgmp/demultiplexing-Chris-Anthony/tree/master/TEST-output_FASTQ
+    
 4. Pseudocode
+
+    See https://github.com/2020-bgmp/demultiplexing-Chris-Anthony/blob/master/Assignment-the-first/demultiplex_pseudocode.txt
+    
 5. High level functions. For each function, be sure to include:
     1. Description/doc string
     2. Function headers (name and parameters)
