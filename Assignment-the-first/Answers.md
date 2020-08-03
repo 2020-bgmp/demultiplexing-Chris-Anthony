@@ -14,17 +14,21 @@
     1. A per base distribution of quality scores for read1, read2, index1, and index2 are show below.
     
         read1
+        
         ![](https://raw.githubusercontent.com/2020-bgmp/demultiplexing-Chris-Anthony/master/Assignment-the-first/Mean_Qscore_R1.png)
         
         index1
+        
         ![](https://raw.githubusercontent.com/2020-bgmp/demultiplexing-Chris-Anthony/master/Assignment-the-first/Mean_Qscore_R2.png)
         
         index2
+        
         ![](https://raw.githubusercontent.com/2020-bgmp/demultiplexing-Chris-Anthony/master/Assignment-the-first/Mean_Qscore_R3.png)
         
         read2
+        
         ![](https://raw.githubusercontent.com/2020-bgmp/demultiplexing-Chris-Anthony/master/Assignment-the-first/Mean_Qscore_R4.png)
-    2. A good quality score cutoff for the index reads and biological read pairs to utilize for sample identification and downstream analysis for both would be Q30. A Q score of 30 is equivalent to the probability of an incorrect base call of 1 in 1000 times. A lower qscore (Q20) will have an incorrect base call probability of 1 in 100. For biological reads greater than 100 bp, there will be one inccorect baseEach base for all index and biological read pairs have a mean quality score above 30. However, in the early cycles, the mean quality score are close to this cutoff. In order to not remove these reads, I will take the average quality of the index reads.
+    2. A good quality score cutoff for the index reads and biological read pairs to utilize for sample identification and downstream analysis for both would be Q30. A Q score of 30 is equivalent to the probability of an incorrect base call of 1 in 1000 times. A lower qscore (Q20) will have an incorrect base call probability of 1 in 100. For biological reads greater than 100 bp, there will be one inccorect base. Each base for all index and biological read pairs have a mean quality score above 30. However, in the early cycles, the mean quality score are close to this cutoff. In order to not remove these reads, I will take the average quality of the index reads.
     3. The number of indexes that have an undetermined (N) base calls are listed below along with the unix command.
     
     ```
@@ -43,12 +47,19 @@
 2. Describe output
 
     Demultiplexed FASTQ files with the index-pair added to the header line
+    
         - 1 FASTQ per index pair (48 total) (1 index pair per biological read 1 and 2)
+        
         - 2 FASTQ for non-matching index-pairs (1 index pair per biological read 1 and 2)
+        
         - 2 FASTQ for low quality (determined in Part 1) or unknown base (1 index pair per biological read 1 and 2)
+        
     Also, report the following number of occurances:
+    
         - properly matched indexes
+        
         - mismatched indexes (index-hopping observed)
+        
         - index pairs with unknown base
         
 3. Upload your [4 input FASTQ files](../TEST-input_FASTQ) and your [4 expected output FASTQ files](../TEST-output_FASTQ).
