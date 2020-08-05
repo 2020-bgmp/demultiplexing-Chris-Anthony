@@ -163,7 +163,7 @@ def analyzeRecord(record:list, qscore:int, dict_count:dict)->dict:
     # Count number of occurances per barcode pair
     check =[]
 
-    if barcode_pair in dict_count:
+    if barcode_pair in dict_count.keys():
         dict_count[barcode_pair][0] += 1
         check = barcode_pair.split("-")
         if check[0] != check[1]: # count number of mismatches
