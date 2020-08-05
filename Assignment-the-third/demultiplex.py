@@ -48,28 +48,31 @@ def reverseComp(seq:str)->str:
 
     return reverseComp
 
-def createBarcodePairs(indexes:str)->list:
-    '''Take in the indexes.txt, returns a list of the indexes'''
+def createBarcodePairs(indexes:str)->(dict, list):
+    '''Take in the indexes.txt, returns a list of the indexes and a list of samples'''
     import re
     import itertools
 
     DNA = re.compile("[ATCG]{2,}")
 
+    temp = []
     index_list = []
+    sample_dict = {}
 
     with open(indexes, "r") as fh:
         for line in fh:
             line = line.rstrip("\n")
-            index = DNA.findall(line)
-            if index != []:
-                index_list.append(index[0])
+            temp = line.split("\t")
+            if DNA.search(line):
+                sample_dict[temp[4]] = temp[0]
+                index_list.append(temp[4])
     
     index_list = list(itertools.product(index_list, repeat=2))
 
     for i in range(len(index_list)):
         index_list[i] = index_list[i][0] + "-" + index_list[i][1]
 
-    return index_list
+    return sample_dict, index_list
 
 def convert_phred(letter:str)->int:
     '''Converts a single character into a phred score'''
@@ -182,6 +185,41 @@ def analyzeRecord(record:list, qscore:int, dict_count:dict)->dict:
 
     return dict_count
 
+def printAnalysis(dict_count:dict, sample_dict:dict)->None:
+    '''Print a demultiplex report as a textfile using a sample list and dictionary of barcode pair occurances.'''
+    # Count the number of matched indexes
+    match = 0
+    check = []
+        
+    for key in dict_count.keys():
+        if key not in ["mismatch", "lowQ_unk"]:
+            check = key.split("-")
+            if check[0] == check[1]:
+                match += dict_count[key][0]
+
+    total = match + dict_count["mismatch"][0] + dict_count["lowQ_unk"][0]
+
+    with open("demultiplex_results.txt", "w") as OUT:
+        OUT.writelines(["The number of read-pairs with matched indexes are (% total reads):\t", str(match), "\t(", str(format(match/total, '.2%')), ")\n"])
+        OUT.writelines(["The number of read-pairs with mismatched indexes are (% total reads):\t", str(dict_count["mismatch"][0]), "\t(", str(format(dict_count["mismatch"][0]/total, '.2%')), ")\n"])
+        OUT.writelines(["The number of read-pairs with unknown indexes after error correction are (% total reads):\t", str(dict_count["lowQ_unk"][0]), "\t(", str(format(dict_count["lowQ_unk"][0]/total, '.2%')), ")\n"])
+        OUT.write("NOTE: Low quality reads were not separated from these counts.\n\n")
+
+        OUT.writelines(["Sample\t", "Barcode Pair\t", "Number of Occurances\t", "Percentage of Total\t","\n"])
+        for key in sample_dict.keys():
+            barcode_pair = key + "-" + key
+            OUT.writelines([str(sample_dict[key]), "\t", str(barcode_pair), "\t", str(dict_count[barcode_pair][0]), "\t", str(format(dict_count[barcode_pair][0]/total, '.2%')), "\n"])
+
+        OUT.writelines(["\nBarcode Pair\t", "Number of Occurances\t", "Percentage of Total\t","\n"])
+        for key in dict_count.keys():
+            if key != "mismatch":
+                if  key == "lowQ_unk":
+                    OUT.writelines(["unknown barcodes\t", str(dict_count[key][0]), "\t", str(format(dict_count[key][0]/total, '.2%')), "\n"])
+                else:
+                    OUT.writelines([key, "\t", str(dict_count[key][0]), "\t", str(format(dict_count[key][0]/total, '.2%')), "\n"])
+
+    return None
+
 def main(read_list:list, indexes:str, qscore:int):
     '''Takes in four read FASTQ files as a list, iterates record by record, 
     and separates records into output files based on barcode pair/quality'''
@@ -191,7 +229,9 @@ def main(read_list:list, indexes:str, qscore:int):
     # initialize dictionary
     dict_count = {}
 
-    for index in createBarcodePairs(indexes):
+    sample_dict, index_list = createBarcodePairs(indexes)
+
+    for index in index_list:
         dict_count[index] = [0, "output_R1_" + index + ".fastq", "output_R4_" + index + ".fastq"]
     dict_count["lowQ_unk"] = [0, "output_R1_" + "lowQ_unk" + ".fastq", "output_R4_" + "lowQ_unk" + ".fastq"]
     dict_count["mismatch"] = [0, "output_R1_" + "mismatch" + ".fastq", "output_R4_" + "mismatch" + ".fastq"]
@@ -212,29 +252,7 @@ def main(read_list:list, indexes:str, qscore:int):
     dict_count = analyzeRecord(record, qscore, dict_count)
 
     # Print number of matched, mismatched and unknown index pairs
-    match = 0
-    check = []
-    
-    # Count the number of matched indexes
-    for key in dict_count.keys():
-        if key not in ["mismatch", "lowQ_unk"]:
-            check = key.split("-")
-            if check[0] == check[1]:
-                match += dict_count[key][0]
-
-    with open("demultiplex_results.txt", "w") as OUT:
-        OUT.writelines(["The number of read-pairs with matched indexes are:\t", str(match), "\n"])
-        OUT.writelines(["The number of read-pairs with mismatched indexes are:\t", str(dict_count["mismatch"][0]), "\n"])
-        OUT.writelines(["The number of read-pairs with unknown indexes after error correction are:\t", str(dict_count["lowQ_unk"][0]), "\n"])
-        OUT.write("NOTE: Low quality reads were not separated from these counts.\n\n")
-
-        OUT.writelines(["Barcode Pair\t", "Number of Occurances", "\n"])
-        for key in dict_count.keys():
-            if key != "mismatch":
-                if  key == "lowQ_unk":
-                    OUT.writelines(["unknown barcodes\t", str(dict_count[key][0]), "\n"])
-                else:
-                    OUT.writelines([key, "\t", str(dict_count[key][0]), "\n"])
+    printAnalysis(dict_count, sample_dict)
 
     # Close all files
     for fh in files:
