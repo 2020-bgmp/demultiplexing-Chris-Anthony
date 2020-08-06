@@ -96,7 +96,7 @@ def errorCorrect(record:list)->list:
     forward = record[1].strip()
     reverse = reverseComp(record[2].strip())
 
-    for i in range(len(forward)):
+    for i in range(0, len(forward)):
         if i == 0: # Initializes new string
             if forward[i] != reverse[i]: 
                 if forward[i] == "N": # If forward string starts with N, replace with reverse
