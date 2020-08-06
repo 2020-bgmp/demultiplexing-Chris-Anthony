@@ -170,7 +170,7 @@ def analyzeRecord(record:list, qscore:int, dict_count:dict)->dict:
             barcode_pair = "mismatch"
             dict_count["mismatch"][0] += 1
     else: # for barcode pairs not in dictionary (e.g. contains N), count as unknown
-        barocde_pair = "lowQ_unk"
+        barcode_pair = "lowQ_unk"
         dict_count["lowQ_unk"][0] += 1
     
     # Write to output files
