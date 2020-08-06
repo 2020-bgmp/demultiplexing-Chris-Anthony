@@ -96,6 +96,8 @@ def errorCorrect(record:list)->list:
     forward = record[1].strip()
     reverse = reverseComp(record[2].strip())
 
+    seq = ""
+
     for i in range(0, len(forward)):
         if i == 0: # Initializes new string
             if forward[i] != reverse[i]: 
@@ -104,7 +106,8 @@ def errorCorrect(record:list)->list:
                 if reverse[i] == "N": # and vice versa
                     seq = forward[i]
             else:
-                seq = forward[i] 
+                seq = forward[i]
+                print("doing this")
         else: # Concatenate to string while error correcting
             if forward[i] != reverse[i]:
                 if forward[i] == "N":
